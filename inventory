@@ -1,0 +1,7 @@
+# This file contails the ip's of all the servers that will be managed by ansible
+
+# Raspberry Pi
+192.168.0.218
+
+# Jetson Nano
+192.168.0.106
