@@ -13,3 +13,8 @@
     apt:
       name: libapache2-mod-php
       state: absent
+
+  - name: install Samba package
+    package:
+      name: samba
+      state: absent

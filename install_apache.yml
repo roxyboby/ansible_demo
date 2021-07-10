@@ -4,16 +4,16 @@
   become: true
   tasks:
 
-  - name: update repository index
-    apt:
+
+
+
+  - name: Install apache and php packages for Ubuntu and Debian
+    package:
+      name: 
+        - "{{ apache_package }}"
+        - "{{ php_package }}"
+      state: latest
       update_cache: yes
+    
 
-  - name: Install apache2 package
-    apt:
-      name: apache2
-      state: latest
-
-  - name: Install php support for Apache
-    apt:
-      name: libapache2-mod-php
-      state: latest
+  
