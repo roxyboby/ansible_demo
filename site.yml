@@ -11,13 +11,41 @@
       update_cache: yes
     when: ansible_distribution == "CentOS"
 
-  - name: install updates (Ubuntu)
+  - name: install updates (Ubuntu)&(Debian)
     tags: always
     apt:
       upgrade: dist
       update_cache: yes
+    when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- hosts: workstations
+  become: true
+  tasks:
+
+  - name: install unzip
+    package:
+      name: unzip
+
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.0.2/terraform_1.0.2_linux_arm.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+    when: ansible_distribution == "Debian"
+
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.0.2/terraform_1.0.2_linux_arm64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
     when: ansible_distribution == "Ubuntu"
-  
+
 - hosts: web_servers
   become: true
   tasks:
