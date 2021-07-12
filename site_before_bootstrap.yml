@@ -4,25 +4,29 @@
   become: true
   pre_tasks:
  
-  - name: update repo cache (centos)
+  - name: install updates (centos)
     tags: always
     dnf:
+      update_only: yes
       update_cache: yes
-    changed_when: false
     when: ansible_distribution == "CentOS"
 
-  - name: update repo cache (Ubuntu)&(Debian)
+  - name: install updates (Ubuntu)&(Debian)
     tags: always
     apt:
+      upgrade: dist
       update_cache: yes
-    changed_when: false
     when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
 - hosts: all
   become: true
   tasks:
 
-
+  - name: create simone user
+    tags: always
+    user:
+      name: simone
+      groups: root
 
   - name: add ssh key for simone
     tags: always
@@ -30,6 +34,14 @@
       user: simone
       key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIoc5o9x48XA9I4ZroeUREgHkcM2BtGHv4zhP6xIACeP ansible"
 
+  - name: add sudoers file for simone
+    tags: always
+    copy:
+      src: sudoer_simone
+      dest: /etc/sudoers.d/simone
+      owner: root
+      group: root
+      mode: 0440
 
 - hosts: workstations
   become: true
