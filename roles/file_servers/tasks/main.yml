@@ -1,0 +1,22 @@
+- name: install samba package
+  tags: samba, gagan
+  package:
+    name: samba
+    state: latest
+  when:  ansible_nodename == "Jetson" or ansible_nodename == "raspberrypi"
+
+- name: start smbd (Ubuntu & Debian)
+  tags: samba, gagan
+  service:
+    name: smbd
+    state: started
+    enabled: yes
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- name: start nmbd (Ubuntu & Debian)
+  tags: samba, gagan
+  service:
+    name: nmbd
+    state: started
+    enabled: yes
+  when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
