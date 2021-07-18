@@ -1,0 +1,153 @@
+---
+ 
+- hosts: all
+  become: true
+  pre_tasks:
+ 
+  - name: update repo cache (centos)
+    tags: always
+    dnf:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "CentOS"
+
+  - name: update repo cache (Ubuntu)&(Debian)
+    tags: always
+    apt:
+      update_cache: yes
+    changed_when: false
+    when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+
+- hosts: all
+  become: true
+  tasks:
+
+
+
+  - name: add ssh key for simone
+    tags: always
+    authorized_key:
+      user: simone
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIoc5o9x48XA9I4ZroeUREgHkcM2BtGHv4zhP6xIACeP ansible"
+
+
+- hosts: workstations
+  become: true
+  tasks:
+
+  - name: install unzip
+    package:
+      name: unzip
+
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.0.2/terraform_1.0.2_linux_arm.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+    when: ansible_distribution == "Debian"
+
+  - name: install terraform
+    unarchive:
+      src: https://releases.hashicorp.com/terraform/1.0.2/terraform_1.0.2_linux_arm64.zip
+      dest: /usr/local/bin
+      remote_src: yes
+      mode: 0755
+      owner: root
+      group: root
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: web_servers
+  become: true
+  tasks:
+
+  - name: install apache and php for Ubuntu servers
+    tags: apache, apache2, Ubuntu, gagan
+    apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu" or ansible_nodename == "raspberrypi"
+ 
+  - name: install apache and php for CentOS servers
+    tags: apache, Centos, httpd
+    dnf:
+      name:
+        - httpd
+        - php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: copy default html file for site
+    tags: apache, apache2, httpd
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: change email address for webmaster@localhost (jetson & raspberry)
+    tags: apache, ubuntu, debian, smbd
+    lineinfile:
+      path: /etc/apache2/sites-available/000-default.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin roland@localhost
+    when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+    register: smbd
+    
+  - name: restart smbd (Ubuntu)
+    tags: apache, smbd
+    service:
+      name: smbd
+      state: restarted
+    when: smbd.changed
+
+- hosts: db_servers
+  become: true
+  tasks:
+
+  - name: install mariadb package (CentOS)
+    tags: Centos, db, mariadb
+    dnf:
+      name: mariadb
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: install mariadb package (Ubuntu)
+    tags: db, mariadb, Ubuntu
+    apt:
+      name: mariadb-server
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+- hosts: file_servers
+  become: true
+  tasks:
+ 
+  - name: install samba package
+    tags: samba, gagan
+    package: 
+      name: samba
+      state: latest
+    when:  ansible_nodename == "Jetson" or ansible_nodename == "raspberrypi"
+
+  - name: start smbd (Ubuntu & Debian)
+    tags: samba, gagan
+    service:
+      name: smbd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"  
+  
+  - name: start nmbd (Ubuntu & Debian)
+    tags: samba, gagan
+    service:
+      name: nmbd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
