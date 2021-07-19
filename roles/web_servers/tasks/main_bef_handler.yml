@@ -19,10 +19,16 @@
   lineinfile:
     path: /etc/apache2/sites-available/000-default.conf
     regexp: '^ServerAdmin'
-    line: ServerAdmin rolandlobo@localhost
+    line: ServerAdmin roland@localhost
   when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
-  notify: restart_smbd
+  register: smbd
 
+- name: restart apache2
+  tags: apache, httpd
+  service:
+    name: "{{ apache_service }}"
+    state: restarted
+  when: smbd.changed
 
 - name: copy default html file for site
   tags: apache, apache2, httpd

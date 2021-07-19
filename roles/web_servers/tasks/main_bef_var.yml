@@ -1,0 +1,37 @@
+  - name: install apache and php for Ubuntu & Debian servers
+    tags: apache, apache2, Ubuntu, gagan
+    apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu" or ansible_nodename == "raspberrypi"
+
+  - name: install apache and php for CentOS servers
+    tags: apache, Centos, httpd
+    dnf:
+      name:
+        - httpd
+        - php
+      state: latest
+      update_cache: yes
+    when: ansible_distribution == "CentOS"
+
+
+- name: copy default html file for site
+    tags: apache, apache2, httpd
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: change email address for webmaster@localhost (jetson & raspberry)
+    tags: apache, ubuntu, debian, smbd
+    lineinfile:
+      path: /etc/apache2/sites-available/000-default.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin roland@localhost
+    when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+    register: smbd
